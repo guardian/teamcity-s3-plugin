@@ -23,8 +23,10 @@ import java.util.Date;
 
 public class S3BuildServerListener extends BuildServerAdapter {
     private final AmazonS3Client client;
+    private S3Extension extension;
 
-    public S3BuildServerListener(@NotNull EventDispatcher<BuildServerListener> eventDispatcher) {
+    public S3BuildServerListener(@NotNull EventDispatcher<BuildServerListener> eventDispatcher, S3Extension extension) {
+        this.extension = extension;
         client = new AmazonS3Client();
         eventDispatcher.addListener(this);
     }
@@ -35,7 +37,7 @@ public class S3BuildServerListener extends BuildServerAdapter {
 
         runningBuild.addBuildMessage(new BuildMessage1(DefaultMessagesInfo.SOURCE_ID, DefaultMessagesInfo.MSG_TEXT, Status.NORMAL, new Date(), "About to upload artifacts"));
 
-        if (runningBuild.isArtifactsExists()) {
+        if (runningBuild.isArtifactsExists() && extension.bucketName != null) {
             final String uploadDirectory = runningBuild.getProjectExternalId() + "/" + runningBuild.getBuildTypeName() + "/" + runningBuild.getBuildNumber();
             normalMessage("Uploading to: " +  uploadDirectory);
 
@@ -44,7 +46,7 @@ public class S3BuildServerListener extends BuildServerAdapter {
                 public Continuation processBuildArtifact(@NotNull BuildArtifact buildArtifact) {
                     if (buildArtifact.isFile() || buildArtifact.isArchive()) {
                         try {
-                            client.putObject("travis-ci-artifact-test", uploadDirectory + "/" + buildArtifact.getName(), buildArtifact.getInputStream(),
+                            client.putObject(extension.bucketName, uploadDirectory + "/" + buildArtifact.getName(), buildArtifact.getInputStream(),
                                     new ObjectMetadata());
                             return Continuation.CONTINUE;
                         } catch (IOException e) {
