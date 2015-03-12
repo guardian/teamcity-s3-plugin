@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<teamcity-plugin xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:schemas-jetbrains-com:teamcity-plugin-v1-xml">
+  <info>
+    <name>s3-plugin</name>
+    <display-name>s3-plugin</display-name>
+    <version>@Version@</version>
+    <description>Automatically uploads artifacts to S3</description>
+    <download-url>Plugin download URL</download-url>
+    <email>Plugin author e-mail</email>
+    <vendor>
+      <name>The Guardian</name>
+      <url>https://github.com/guardian/</url>
+      <logo>Plugin vendor logo URL</logo>
+    </vendor>
+  </info>
+  <deployment use-separate-classloader="true" />
+</teamcity-plugin>
