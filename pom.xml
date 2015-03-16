@@ -25,8 +25,42 @@
                       <target>1.5</target>
                   </configuration>
               </plugin>
+              <plugin>
+                  <groupId>net.alchim31.maven</groupId>
+                  <artifactId>scala-maven-plugin</artifactId>
+                  <version>3.1.6</version>
+              </plugin>
           </plugins>
       </pluginManagement>
+      <plugins>
+          <plugin>
+              <groupId>net.alchim31.maven</groupId>
+              <artifactId>scala-maven-plugin</artifactId>
+              <version>3.1.6</version>
+              <configuration>
+                  <scalaVersion>2.11.6</scalaVersion>
+              </configuration>
+              <executions>
+                  <execution>
+                      <id>scala-compile-first</id>
+                      <phase>process-resources</phase>
+                      <goals>
+                          <goal>add-source</goal>
+                          <goal>compile</goal>
+                      </goals>
+                  </execution>
+                  <execution>
+                      <id>scala-test-compile</id>
+                      <phase>process-test-resources</phase>
+                      <goals>
+                          <goal>testCompile</goal>
+                      </goals>
+                  </execution>
+              </executions>
+          </plugin>
+      </plugins>
+      <sourceDirectory>src/main/scala</sourceDirectory>
+      <testSourceDirectory>src/test/scala</testSourceDirectory>
   </build>
   <modules>
     <module>s3-plugin-server</module>
