@@ -14,41 +14,37 @@ import jetbrains.buildServer.serverSide.artifacts.{BuildArtifact, BuildArtifacts
 import jetbrains.buildServer.util.EventDispatcher
 import org.jetbrains.annotations.NotNull
 
-class S3BuildServerListener(@NotNull eventDispatcher: EventDispatcher[BuildServerListener], extension: S3Extension) extends BuildServerAdapter {
+class S3BuildServerListener(eventDispatcher: EventDispatcher[BuildServerListener], extension: S3Extension) extends BuildServerAdapter {
   val client: AmazonS3Client = new AmazonS3Client
 
   eventDispatcher.addListener(this)
 
   override def beforeBuildFinish(runningBuild: SRunningBuild) {
-    Loggers.SERVER.info("S3 Build finishing soon:" + runningBuild.isArtifactsExists)
     runningBuild.addBuildMessage(normalMessage("About to upload artifacts"))
 
-    if (runningBuild.isArtifactsExists && extension.bucketName != null) {
-      val uploadDirectory = s"${runningBuild.getProjectExternalId}/${runningBuild.getBuildTypeName}/${runningBuild.getBuildNumber}"
-      normalMessage("Uploading to: " + uploadDirectory)
+    for (bucket <- extension.bucketName) {
+      if (runningBuild.isArtifactsExists) {
+        val uploadDirectory = s"${runningBuild.getProjectExternalId}/${runningBuild.getBuildTypeName}/${runningBuild.getBuildNumber}"
+        normalMessage(s"Uploading to: $uploadDirectory")
 
-      runningBuild.getArtifacts(BuildArtifactsViewMode.VIEW_DEFAULT).iterateArtifacts(new BuildArtifactsProcessor {
-        @NotNull def processBuildArtifact(@NotNull buildArtifact: BuildArtifact) = {
-          if (buildArtifact.isFile || buildArtifact.isArchive) {
-            try {
-              client.putObject(extension.bucketName, s"$uploadDirectory/${buildArtifact.getName}", buildArtifact.getInputStream, new ObjectMetadata)
-              Continuation.CONTINUE
-            }
-            catch {
-              case e: IOException => {
-                runningBuild.addBuildMessage(new BuildMessage1(DefaultMessagesInfo.SOURCE_ID, DefaultMessagesInfo.MSG_BUILD_FAILURE, Status.ERROR, new Date, "Error uploading artifacts:" + e.getMessage))
-                e.printStackTrace
-                Continuation.BREAK
+        runningBuild.getArtifacts(BuildArtifactsViewMode.VIEW_DEFAULT).iterateArtifacts(new BuildArtifactsProcessor {
+          def processBuildArtifact(buildArtifact: BuildArtifact) = {
+            if (buildArtifact.isFile || buildArtifact.isArchive) {
+              try {
+                client.putObject(bucket, s"$uploadDirectory/${buildArtifact.getName}", buildArtifact.getInputStream, new ObjectMetadata)
+                Continuation.CONTINUE
               }
-            }
+              catch {
+                case e: IOException => {
+                  runningBuild.addBuildMessage(new BuildMessage1(DefaultMessagesInfo.SOURCE_ID, DefaultMessagesInfo.MSG_BUILD_FAILURE, Status.ERROR, new Date, s"Error uploading artifacts: ${e.getMessage}"))
+                  e.printStackTrace
+                  Continuation.BREAK
+                }
+              }
+            } else Continuation.CONTINUE
           }
-          else {
-            runningBuild.addBuildMessage(normalMessage("Found a " + buildArtifact.getRelativePath))
-            Continuation.CONTINUE
-          }
-        }
-      })
-
+        })
+      }
     }
     runningBuild.addBuildMessage(normalMessage("Artifact S3 upload complete"))
   }
