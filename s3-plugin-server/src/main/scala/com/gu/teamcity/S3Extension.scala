@@ -4,9 +4,8 @@ import jetbrains.buildServer.serverSide.MainConfigProcessor
 import jetbrains.buildServer.serverSide.SBuildServer
 import org.jdom.Element
 
-class S3Extension(server: SBuildServer) extends MainConfigProcessor {
+class S3Extension extends MainConfigProcessor {
   var bucketName: Option[String] = None
-  server.registerExtension(classOf[MainConfigProcessor], "S3", this)
 
   def readFrom(root: Element) {
     for {

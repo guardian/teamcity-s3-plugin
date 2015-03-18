@@ -7,6 +7,9 @@ import jetbrains.buildServer.messages.{BuildMessage1, DefaultMessagesInfo, Statu
 import jetbrains.buildServer.serverSide.{BuildServerAdapter, BuildServerListener, SRunningBuild}
 import jetbrains.buildServer.util.EventDispatcher
 import org.joda.time.{DateTimeZone, DateTime}
+import org.json4s.JsonAST.JObject
+import org.json4s.JsonDSL._
+import org.json4s.native.JsonMethods._
 
 class ManifestUploader(eventDispatcher: EventDispatcher[BuildServerListener], s3: S3) extends BuildServerAdapter {
 
@@ -16,7 +19,7 @@ class ManifestUploader(eventDispatcher: EventDispatcher[BuildServerListener], s3
     import scala.collection.convert.wrapAsScala._
 
     val properties = Seq(
-      "ProjectName" -> runningBuild.getFullName,
+      "ProjectName" -> runningBuild.getFullName.replaceAll("""\s+""",  ""),
       "BuildNumber" -> runningBuild.getBuildNumber,
       "StartTime" ->  new DateTime(runningBuild.getStartDate).withZone(DateTimeZone.UTC).toString //Joda default is ISO8601
     ) ++ runningBuild.getRevisions.flatMap(revision => Seq(
@@ -28,9 +31,9 @@ class ManifestUploader(eventDispatcher: EventDispatcher[BuildServerListener], s3
       "Branch" -> r.getProperties.get("branch")
     ))
 
-    val propertiesString = properties.map { case (k,v) => s"$k=$v" }.mkString("\n") + "\n"
+    val propertiesJSON = pretty(render(properties.foldLeft(JObject())(_ ~ _)))
 
-    s3.upload(runningBuild, "build.properties", new ByteArrayInputStream(propertiesString.getBytes("UTF-8")))
+    s3.upload(runningBuild, "build.json", new ByteArrayInputStream(propertiesJSON.getBytes("UTF-8")))
 
     runningBuild.addBuildMessage(normalMessage("Manifest S3 upload complete"))
   }
