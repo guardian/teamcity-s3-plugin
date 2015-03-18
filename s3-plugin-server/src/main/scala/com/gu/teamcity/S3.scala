@@ -11,7 +11,7 @@ import jetbrains.buildServer.serverSide.SRunningBuild
 import scala.util.Try
 import scala.util.control.NonFatal
 
-class S3(extension: S3Extension) {
+class S3(extension: S3ConfigManager) {
   val client = new AmazonS3Client()
 
   def upload(build: SRunningBuild, fileName: String, contents: InputStream): Boolean =

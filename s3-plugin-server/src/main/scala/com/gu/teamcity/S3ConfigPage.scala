@@ -6,7 +6,7 @@ import jetbrains.buildServer.web.openapi.{Groupable, PagePlaces, PluginDescripto
 import javax.servlet.http.HttpServletRequest
 import java.util.Map
 
-class S3ConfigPage(extension: S3Extension, pagePlaces: PagePlaces, descriptor: PluginDescriptor)
+class S3ConfigPage(extension: S3ConfigManager, pagePlaces: PagePlaces, descriptor: PluginDescriptor)
   extends AdminPage(pagePlaces, "S3", descriptor.getPluginResourcesPath("input.jsp"), "S3") {
 
   register()

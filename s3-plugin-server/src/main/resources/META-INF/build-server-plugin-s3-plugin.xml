@@ -5,6 +5,6 @@
     <bean class="com.gu.teamcity.ManifestUploader"/>
     <bean class="com.gu.teamcity.S3ConfigPage"/>
     <bean class="com.gu.teamcity.S3ConfigController"/>
-    <bean class="com.gu.teamcity.S3Extension"/>
+    <bean class="com.gu.teamcity.S3ConfigManager"/>
     <bean class="com.gu.teamcity.S3"/>
 </beans>

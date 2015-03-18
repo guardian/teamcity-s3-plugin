@@ -8,12 +8,12 @@ import org.springframework.web.servlet.view.RedirectView
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 
-class S3ConfigController(extension: S3Extension, webControllerManager: WebControllerManager) extends MultipartFormController {
+class S3ConfigController(extension: S3ConfigManager, webControllerManager: WebControllerManager) extends MultipartFormController {
   webControllerManager.registerController("/app/s3/**", this)
 
   protected def doPost(httpServletRequest: HttpServletRequest, httpServletResponse: HttpServletResponse): ModelAndView = {
     val bucket: String = httpServletRequest.getParameter("bucketName")
-    extension.bucketName = if (bucket.isEmpty) None else Some(bucket)
+    if (!bucket.isEmpty) extension.update(S3Config(Some(bucket)))
     new ModelAndView(new RedirectView("/admin/admin.html?item=S3"))
   }
 }
