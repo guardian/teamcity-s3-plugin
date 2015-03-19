@@ -4,16 +4,15 @@ import java.io.ByteArrayInputStream
 import java.util.Date
 
 import jetbrains.buildServer.messages.{BuildMessage1, DefaultMessagesInfo, Status}
-import jetbrains.buildServer.serverSide.{BuildServerAdapter, BuildServerListener, SRunningBuild}
-import jetbrains.buildServer.util.EventDispatcher
-import org.joda.time.{DateTimeZone, DateTime}
+import jetbrains.buildServer.serverSide.{BuildServerAdapter, SRunningBuild}
+import org.joda.time.{DateTime, DateTimeZone}
 import org.json4s.JsonAST.JObject
 import org.json4s.JsonDSL._
 import org.json4s.native.JsonMethods._
 
-class ManifestUploader(eventDispatcher: EventDispatcher[BuildServerListener], s3: S3) extends BuildServerAdapter {
+import scala.util.{Failure, Success}
 
-  eventDispatcher.addListener(this)
+class ManifestUploader(s3: S3) extends BuildServerAdapter {
 
   override def beforeBuildFinish(runningBuild: SRunningBuild) {
     import scala.collection.convert.wrapAsScala._
@@ -33,9 +32,11 @@ class ManifestUploader(eventDispatcher: EventDispatcher[BuildServerListener], s3
 
     val propertiesJSON = pretty(render(properties.foldLeft(JObject())(_ ~ _)))
 
-    s3.upload(runningBuild, "build.json", new ByteArrayInputStream(propertiesJSON.getBytes("UTF-8")))
-
-    runningBuild.addBuildMessage(normalMessage("Manifest S3 upload complete"))
+    s3.upload(runningBuild, "build.json", new ByteArrayInputStream(propertiesJSON.getBytes("UTF-8"))) match {
+      case Failure(e) => runningBuild.addBuildMessage(new BuildMessage1(DefaultMessagesInfo.SOURCE_ID, DefaultMessagesInfo.MSG_BUILD_FAILURE, Status.ERROR, new Date,
+        s"Error uploading manifest: ${e.getMessage}"))
+      case Success(status) => if (status) runningBuild.addBuildMessage(normalMessage("Manifest S3 upload complete"))
+    }
   }
 
   private def normalMessage(text: String) =

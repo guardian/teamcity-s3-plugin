@@ -6,12 +6,11 @@ import jetbrains.buildServer.messages.{BuildMessage1, DefaultMessagesInfo, Statu
 import jetbrains.buildServer.serverSide.artifacts.BuildArtifacts.BuildArtifactsProcessor
 import jetbrains.buildServer.serverSide.artifacts.BuildArtifacts.BuildArtifactsProcessor.Continuation
 import jetbrains.buildServer.serverSide.artifacts.{BuildArtifact, BuildArtifactsViewMode}
-import jetbrains.buildServer.serverSide.{BuildServerAdapter, BuildServerListener, SRunningBuild}
-import jetbrains.buildServer.util.EventDispatcher
+import jetbrains.buildServer.serverSide.{BuildServerAdapter, SRunningBuild}
 
-class ArtifactUploader(eventDispatcher: EventDispatcher[BuildServerListener], s3: S3) extends BuildServerAdapter {
+import scala.util.control.NonFatal
 
-  eventDispatcher.addListener(this)
+class ArtifactUploader(s3: S3) extends BuildServerAdapter {
 
   override def beforeBuildFinish(runningBuild: SRunningBuild) {
     runningBuild.addBuildMessage(normalMessage("About to upload artifacts"))
@@ -20,10 +19,21 @@ class ArtifactUploader(eventDispatcher: EventDispatcher[BuildServerListener], s3
       runningBuild.getArtifacts(BuildArtifactsViewMode.VIEW_DEFAULT).iterateArtifacts(new BuildArtifactsProcessor {
         def processBuildArtifact(buildArtifact: BuildArtifact) = {
           if (buildArtifact.isFile || buildArtifact.isArchive)
-            if (s3.upload(runningBuild, s"artifacts/${buildArtifact.getName}", buildArtifact.getInputStream))
-              Continuation.CONTINUE
-            else
-              Continuation.BREAK
+            s3.upload(runningBuild, s"artifacts/${buildArtifact.getName}", buildArtifact.getInputStream) map {
+              uploaded =>
+                if (uploaded) {
+                  Continuation.CONTINUE
+                } else {
+                  normalMessage("Not configured for uploading")
+                  Continuation.BREAK
+                }
+            } recover {
+              case NonFatal(e) => {
+                runningBuild.addBuildMessage(new BuildMessage1(DefaultMessagesInfo.SOURCE_ID, DefaultMessagesInfo.MSG_BUILD_FAILURE, Status.ERROR, new Date,
+                  s"Error uploading artifacts: ${e.getMessage}"))
+                Continuation.BREAK
+              }
+            } get
           else
             Continuation.CONTINUE
         }
