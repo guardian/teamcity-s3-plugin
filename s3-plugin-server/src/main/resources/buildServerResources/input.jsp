@@ -14,6 +14,13 @@
                     <label for="access-key">AWS Access Key</label>
                 </td><td>
                     <input type="text" id="access-key" name="${accessKey}" value="" class="longField">
+                    <div class="grayNote">
+                        If either the AWS Access Key or AWS Secret Key are not specified, teamcity will fall back to using the
+                        <a href="http://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/com/amazonaws/auth/DefaultAWSCredentialsProviderChain.html">
+                            DefaultAWSCredentialsProviderChain
+                        </a>
+                        for authentication.
+                    </div>
                 </td>
             </tr><tr>
                 <td>
