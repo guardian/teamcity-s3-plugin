@@ -11,9 +11,13 @@ import javax.servlet.http.HttpServletResponse
 class S3ConfigController(extension: S3ConfigManager, webControllerManager: WebControllerManager) extends MultipartFormController {
   webControllerManager.registerController("/app/s3/**", this)
 
-  protected def doPost(httpServletRequest: HttpServletRequest, httpServletResponse: HttpServletResponse): ModelAndView = {
-    val bucket: String = httpServletRequest.getParameter("bucketName")
-    if (!bucket.isEmpty) extension.update(S3Config(Some(bucket)))
+  protected def doPost(request: HttpServletRequest, response: HttpServletResponse): ModelAndView = {
+    def param(name: String) = emptyAsNone(request.getParameter(name))
+
+    extension.update(S3Config(param("bucketName"), param("accessKey"), param("secretKey")))
+
     new ModelAndView(new RedirectView("/admin/admin.html?item=S3"))
   }
+
+  def emptyAsNone(s: String): Option[String] = if (s.trim.isEmpty) None else Some(s)
 }

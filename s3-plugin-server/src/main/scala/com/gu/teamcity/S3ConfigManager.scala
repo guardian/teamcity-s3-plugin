@@ -1,18 +1,17 @@
 package com.gu.teamcity
 
-import java.io.{PrintWriter, File}
+import java.io.{File, PrintWriter}
 
-import jetbrains.buildServer.serverSide.{ServerPaths, MainConfigProcessor, SBuildServer}
-import org.jdom.Element
-
+import com.amazonaws.auth.{BasicAWSCredentials, AWSCredentialsProvider, AWSCredentials}
+import jetbrains.buildServer.serverSide.ServerPaths
 import org.json4s._
 import org.json4s.native.JsonMethods._
 import org.json4s.native.Serialization
 import org.json4s.native.Serialization._
 
-case class S3Config(bucketName: Option[String])
+case class S3Config(bucketName: Option[String], awsAccessKey: Option[String], awsSecretKey: Option[String])
 
-class S3ConfigManager(paths: ServerPaths) {
+class S3ConfigManager(paths: ServerPaths) extends AWSCredentialsProvider {
   implicit val formats = Serialization.formats(NoTypeHints)
 
   val configFile = new File(s"${paths.getConfigDir}/s3.json")
@@ -27,7 +26,6 @@ class S3ConfigManager(paths: ServerPaths) {
     config.flatMap(_.bucketName)
   }
 
-
   def update(config: S3Config): Unit = {
     synchronized {
       this.config = Some(config)
@@ -36,6 +34,20 @@ class S3ConfigManager(paths: ServerPaths) {
       finally { out.close }
     }
   }
+
+  def details: Map[String, Option[String]] = Map(
+    "bucketName" -> bucketName,
+    "accessKey" -> config.flatMap(_.awsAccessKey),
+    "secretKey" -> config.flatMap(_.awsSecretKey)
+  )
+
+  override def getCredentials: AWSCredentials = (for {
+    c <- config
+    accessKey <- c.awsAccessKey
+    secretKey <- c.awsSecretKey
+  } yield new BasicAWSCredentials(accessKey, secretKey)).getOrElse(null) // Yes, this is sad
+
+  override def refresh(): Unit = ()
 }
 
 object S3ConfigManager {

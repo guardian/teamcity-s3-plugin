@@ -12,7 +12,9 @@ class S3ConfigPage(extension: S3ConfigManager, pagePlaces: PagePlaces, descripto
   register()
 
   override def fillModel(model: Map[String, AnyRef], request: HttpServletRequest) {
-    model.put("bucketName", extension.bucketName.getOrElse(""))
+    import collection.convert.wrapAll._
+
+    model.putAll(extension.details.mapValues(_.getOrElse("")))
   }
 
   override def isAvailable(request: HttpServletRequest): Boolean = {

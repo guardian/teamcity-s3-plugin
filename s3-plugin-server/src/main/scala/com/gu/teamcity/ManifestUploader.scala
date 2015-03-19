@@ -19,7 +19,7 @@ class ManifestUploader(eventDispatcher: EventDispatcher[BuildServerListener], s3
     import scala.collection.convert.wrapAsScala._
 
     val properties = Seq(
-      "ProjectName" -> runningBuild.getFullName.replaceAll("""\s+""",  ""),
+      "ProjectName" -> runningBuild.getFullName.split(" :: ").mkString("::"),
       "BuildNumber" -> runningBuild.getBuildNumber,
       "StartTime" ->  new DateTime(runningBuild.getStartDate).withZone(DateTimeZone.UTC).toString //Joda default is ISO8601
     ) ++ runningBuild.getRevisions.flatMap(revision => Seq(
