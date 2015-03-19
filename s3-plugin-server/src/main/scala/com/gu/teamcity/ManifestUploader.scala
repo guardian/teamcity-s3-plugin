@@ -18,7 +18,7 @@ class ManifestUploader(s3: S3) extends BuildServerAdapter {
     import scala.collection.convert.wrapAsScala._
 
     val properties = Seq(
-      "ProjectName" -> runningBuild.getFullName.split(" :: ").mkString("::"),
+      "ProjectName" -> S3Plugin.cleanFullName(runningBuild),
       "BuildNumber" -> runningBuild.getBuildNumber,
       "StartTime" ->  new DateTime(runningBuild.getStartDate).withZone(DateTimeZone.UTC).toString //Joda default is ISO8601
     ) ++ runningBuild.getRevisions.flatMap(revision => Seq(
