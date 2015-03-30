@@ -19,5 +19,5 @@ class S3ConfigController(extension: S3ConfigManager, webControllerManager: WebCo
     new ModelAndView(new RedirectView("/admin/admin.html?item=S3"))
   }
 
-  def emptyAsNone(s: String): Option[String] = if (s.trim.isEmpty) None else Some(s)
+  def emptyAsNone(s: String): Option[String] = if (s == null || s.trim.isEmpty) None else Some(s)
 }
