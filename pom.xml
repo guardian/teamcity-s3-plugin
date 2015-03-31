@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.gu.teamcity</groupId>
   <artifactId>s3-plugin</artifactId>
-  <version>1.1</version>
+  <version>1.2-SNAPSHOT</version>
   <packaging>pom</packaging>
   <properties>
       <teamcity-version>8.1.4</teamcity-version>
@@ -16,7 +16,7 @@
   </repositories>
     <scm>
         <developerConnection>scm:git:git@github.com:guardian/teamcity-s3-plugin.git</developerConnection>
-      <tag>s3-plugin-1.1</tag>
+      <tag>HEAD</tag>
   </scm>
   <build>
       <pluginManagement>
