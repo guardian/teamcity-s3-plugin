@@ -14,7 +14,10 @@ class S3ConfigController(extension: S3ConfigManager, webControllerManager: WebCo
   protected def doPost(request: HttpServletRequest, response: HttpServletResponse): ModelAndView = {
     def param(name: String) = S3ConfigController.emptyAsNone(request.getParameter(name))
 
-    extension.update(S3Config(param("bucketName"), param("accessKey"), param("secretKey")))
+    extension.update(S3Config(
+      param("artifactBucket"), param("buildManifestBucket"), param("tagManifestBucket"),
+      param("accessKey"), param("secretKey")
+    ))
 
     new ModelAndView(new RedirectView("/admin/admin.html?item=S3"))
   }

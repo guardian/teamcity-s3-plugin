@@ -16,8 +16,8 @@ class S3(config: S3ConfigManager) {
     provider
   })
 
-  def upload(build: SBuild, fileName: String, contents: InputStream): Try[Boolean] =
-    (for (bucket <- config.bucketName) yield
+  def upload(targetBucket: Option[String], build: SBuild, fileName: String, contents: InputStream): Try[Boolean] =
+    (for (bucket <- targetBucket) yield
       Try {
         val uploadDirectory = s"${S3Plugin.cleanFullName(build)}/${build.getBuildNumber}"
         client.putObject(bucket, s"$uploadDirectory/$fileName", contents, new ObjectMetadata)

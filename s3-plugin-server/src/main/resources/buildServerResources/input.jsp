@@ -5,9 +5,21 @@
         <tbody>
             <tr>
                 <td>
-                    <label for="bucket">Bucket</label>
+                    <label for="artifactBucket">Artifact Bucket</label>
                 </td><td>
-                    <input type="text" id="bucket" name="bucketName" value="${bucketName}" class="longField">
+                    <input type="text" id="artifactBucket" name="artifactBucket" value="${artifactBucket}" class="longField">
+                </td>
+            </tr><tr>
+                <td>
+                    <label for="buildManifestBucket">Build Manifest Bucket</label>
+                </td><td>
+                    <input type="text" id="buildManifestBucket" name="buildManifestBucket" value="${buildManifestBucket}" class="longField">
+                </td>
+            </tr><tr>
+                <td>
+                    <label for="tagManifestBucket">Tag Manifest Bucket</label>
+                </td><td>
+                    <input type="text" id="tagManifestBucket" name="tagManifestBucket" value="${tagManifestBucket}" class="longField">
                 </td>
             </tr><tr>
                 <td>

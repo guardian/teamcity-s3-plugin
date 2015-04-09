@@ -10,7 +10,7 @@ import jetbrains.buildServer.serverSide.{BuildServerAdapter, SRunningBuild}
 
 import scala.util.control.NonFatal
 
-class ArtifactUploader(s3: S3) extends BuildServerAdapter {
+class ArtifactUploader(config: S3ConfigManager, s3: S3) extends BuildServerAdapter {
 
   override def beforeBuildFinish(runningBuild: SRunningBuild) {
     runningBuild.addBuildMessage(normalMessage("About to upload artifacts"))
@@ -19,7 +19,7 @@ class ArtifactUploader(s3: S3) extends BuildServerAdapter {
       runningBuild.getArtifacts(BuildArtifactsViewMode.VIEW_DEFAULT).iterateArtifacts(new BuildArtifactsProcessor {
         def processBuildArtifact(buildArtifact: BuildArtifact) = {
           if (buildArtifact.isFile || buildArtifact.isArchive)
-            s3.upload(runningBuild, s"artifacts/${buildArtifact.getName}", buildArtifact.getInputStream) map {
+            s3.upload(config.artifactBucket, runningBuild, buildArtifact.getName, buildArtifact.getInputStream) map {
               uploaded =>
                 if (uploaded) {
                   Continuation.CONTINUE
