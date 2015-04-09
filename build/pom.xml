@@ -4,7 +4,7 @@
   <parent>
     <artifactId>s3-plugin</artifactId>
     <groupId>com.gu.teamcity</groupId>
-    <version>1.3-SNAPSHOT</version>
+    <version>1.3.0</version>
   </parent>
   <artifactId>build</artifactId>
   <packaging>pom</packaging>
@@ -15,12 +15,12 @@
       <dependency>
            <groupId>com.gu.teamcity</groupId>
            <artifactId>s3-plugin-common</artifactId>
-           <version>1.3-SNAPSHOT</version>
+           <version>1.3.0</version>
       </dependency>
       <dependency>
            <groupId>com.gu.teamcity</groupId>
            <artifactId>s3-plugin-server</artifactId>
-           <version>1.3-SNAPSHOT</version>
+           <version>1.3.0</version>
       </dependency>
   </dependencies>
   <build>
