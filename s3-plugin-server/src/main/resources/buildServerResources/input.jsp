@@ -1,8 +1,16 @@
 <%@ include file="/include.jsp" %>
 
 <form action="/app/s3/config" method="post">
-    <table>
+    <table class="runnerFormTable">
         <tbody>
+            <tr class="groupingTitle">
+                <td colspan="2">S3 Buckets</td>
+            </tr><tr>
+                <td class="grayNote" colspan="2">
+                    No attempt to upload will be made if a bucket is not specified. To upload multiple types to the same
+                    bucket, specify the same bucket each time.
+                </td>
+            </tr>
             <tr>
                 <td>
                     <label for="artifactBucket">Artifact Bucket</label>
@@ -21,24 +29,27 @@
                 </td><td>
                     <input type="text" id="tagManifestBucket" name="tagManifestBucket" value="${tagManifestBucket}" class="longField">
                 </td>
+            </tr><tr class="groupingTitle">
+                <td colspan="2">Credentials</td>
+            </tr><tr>
+                <td class="grayNote" colspan="2">
+                    If either the AWS Access Key or AWS Secret Key are not specified, teamcity will fall back to using the
+                    <a href="http://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/com/amazonaws/auth/DefaultAWSCredentialsProviderChain.html">
+                        DefaultAWSCredentialsProviderChain
+                    </a>
+                    for authentication.
+                </td>
             </tr><tr>
                 <td>
                     <label for="access-key">AWS Access Key</label>
                 </td><td>
                     <input type="text" id="access-key" name="accessKey" value="${accessKey}" class="longField">
-                    <div class="grayNote">
-                        If either the AWS Access Key or AWS Secret Key are not specified, teamcity will fall back to using the
-                        <a href="http://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/com/amazonaws/auth/DefaultAWSCredentialsProviderChain.html">
-                            DefaultAWSCredentialsProviderChain
-                        </a>
-                        for authentication.
-                    </div>
                 </td>
             </tr><tr>
                 <td>
                     <label for="secret-key">AWS Secret Key</label>
                 </td><td>
-                    <input type="text" id="secret-key" name="secretKey" value="${secretKey}" class="longField">
+                    <input type="password" id="secret-key" name="secretKey" class="longField">
                 </td>
             </tr>
         </tbody>

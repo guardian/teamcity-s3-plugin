@@ -19,7 +19,7 @@ class S3ConfigManager(paths: ServerPaths) extends AWSCredentialsProvider {
 
   val configFile = new File(s"${paths.getConfigDir}/s3.json")
 
-  private var config: Option[S3Config] = {
+  private[teamcity] var config: Option[S3Config] = {
     if (configFile.exists()) {
       parse(configFile).extractOpt[S3Config]
     } else None
@@ -29,9 +29,15 @@ class S3ConfigManager(paths: ServerPaths) extends AWSCredentialsProvider {
   def buildManifestBucket: Option[String] = config.flatMap(_.buildManifestBucket)
   def tagManifestBucket: Option[String] = config.flatMap(_.tagManifestBucket)
 
-  def update(config: S3Config): Unit = {
+  private[teamcity] def update(config: S3Config): Unit = {
+    this.config = Some(if (config.awsSecretKey.isEmpty && config.awsAccessKey == this.config.flatMap(_.awsAccessKey)) {
+      config.copy(awsSecretKey = this.config.flatMap(_.awsSecretKey))
+    } else config)
+  }
+
+  def updateAndPersist(newConfig: S3Config): Unit = {
     synchronized {
-      this.config = Some(config)
+      update(newConfig)
       val out = new PrintWriter(configFile, "UTF-8")
       try { writePretty(config, out) }
       finally { out.close }
@@ -42,8 +48,7 @@ class S3ConfigManager(paths: ServerPaths) extends AWSCredentialsProvider {
     "artifactBucket" -> artifactBucket,
     "buildManifestBucket" -> buildManifestBucket,
     "tagManifestBucket" -> tagManifestBucket,
-    "accessKey" -> config.flatMap(_.awsAccessKey),
-    "secretKey" -> config.flatMap(_.awsSecretKey)
+    "accessKey" -> config.flatMap(_.awsAccessKey)
   )
 
   override def getCredentials: AWSCredentials = (for {
