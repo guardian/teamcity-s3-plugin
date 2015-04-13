@@ -13,6 +13,7 @@ class TagUploader(config: S3ConfigManager, s3: S3) extends BuildServerAdapter {
     import scala.collection.convert.wrapAsScala._
 
     val tagJSON =pretty(render(asScalaBuffer(newTags)))
-    s3.upload(config.tagManifestBucket, build, s"tags.json", new ByteArrayInputStream(tagJSON.getBytes("UTF-8")))
+    val jsBytes = tagJSON.getBytes("UTF-8")
+    s3.upload(config.tagManifestBucket, build, s"tags.json", new ByteArrayInputStream(jsBytes), jsBytes.length)
   }
 }

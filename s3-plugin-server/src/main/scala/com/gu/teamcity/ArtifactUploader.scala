@@ -13,18 +13,22 @@ import scala.util.control.NonFatal
 class ArtifactUploader(config: S3ConfigManager, s3: S3) extends BuildServerAdapter {
 
   override def beforeBuildFinish(runningBuild: SRunningBuild) {
-    runningBuild.addBuildMessage(normalMessage("About to upload artifacts"))
+    def report(msg: String): Unit = {
+      runningBuild.addBuildMessage(normalMessage(msg))
+    }
+
+    report("About to upload artifacts to S3")
 
     if (runningBuild.isArtifactsExists) {
       runningBuild.getArtifacts(BuildArtifactsViewMode.VIEW_DEFAULT).iterateArtifacts(new BuildArtifactsProcessor {
         def processBuildArtifact(buildArtifact: BuildArtifact) = {
           if (buildArtifact.isFile || buildArtifact.isArchive)
-            s3.upload(config.artifactBucket, runningBuild, buildArtifact.getName, buildArtifact.getInputStream) map {
+            s3.upload(config.artifactBucket, runningBuild, buildArtifact.getName, buildArtifact.getInputStream, buildArtifact.getSize) map {
               uploaded =>
                 if (uploaded) {
                   Continuation.CONTINUE
                 } else {
-                  normalMessage("Not configured for uploading")
+                  report("Not configured for uploading")
                   Continuation.BREAK
                 }
             } recover {
@@ -40,7 +44,7 @@ class ArtifactUploader(config: S3ConfigManager, s3: S3) extends BuildServerAdapt
       })
     }
 
-    runningBuild.addBuildMessage(normalMessage("Artifact S3 upload complete"))
+    report("Artifact S3 upload complete")
   }
 
   private def normalMessage(text: String) =
