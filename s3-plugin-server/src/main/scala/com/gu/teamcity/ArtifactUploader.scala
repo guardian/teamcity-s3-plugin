@@ -2,12 +2,14 @@ package com.gu.teamcity
 
 import java.util.Date
 
+import com.amazonaws.ResetException
 import jetbrains.buildServer.messages.{BuildMessage1, DefaultMessagesInfo, Status}
 import jetbrains.buildServer.serverSide.artifacts.BuildArtifacts.BuildArtifactsProcessor
 import jetbrains.buildServer.serverSide.artifacts.BuildArtifacts.BuildArtifactsProcessor.Continuation
 import jetbrains.buildServer.serverSide.artifacts.{BuildArtifact, BuildArtifactsViewMode}
 import jetbrains.buildServer.serverSide.{BuildServerAdapter, SRunningBuild}
 
+import scala.util.Failure
 import scala.util.control.NonFatal
 
 class ArtifactUploader(config: S3ConfigManager, s3: S3) extends BuildServerAdapter {
@@ -31,13 +33,21 @@ class ArtifactUploader(config: S3ConfigManager, s3: S3) extends BuildServerAdapt
                   report("Not configured for uploading")
                   Continuation.BREAK
                 }
-            } recover {
+            } recoverWith {
+              case e: ResetException => {
+                runningBuild.addBuildMessage(new BuildMessage1(DefaultMessagesInfo.SOURCE_ID,
+                  DefaultMessagesInfo.MSG_BUILD_PROBLEM, Status.WARNING, new Date,
+                  s"Retrying artifact upload after error: ${e.getMessage}"))
+
+                s3.upload(config.artifactBucket, runningBuild, buildArtifact.getName,
+                  buildArtifact.getInputStream, buildArtifact.getSize).map(_ => Continuation.CONTINUE)
+              }
               case NonFatal(e) => {
                 runningBuild.addBuildMessage(new BuildMessage1(DefaultMessagesInfo.SOURCE_ID, DefaultMessagesInfo.MSG_BUILD_FAILURE, Status.ERROR, new Date,
                   s"Error uploading artifacts: ${e.getMessage}"))
-                Continuation.BREAK
+                Failure(e)
               }
-            } get
+            } getOrElse(Continuation.BREAK)
           else
             Continuation.CONTINUE
         }
