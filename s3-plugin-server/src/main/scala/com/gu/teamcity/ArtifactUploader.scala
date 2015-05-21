@@ -20,18 +20,18 @@ class ArtifactUploader(config: S3ConfigManager, s3: S3) extends BuildServerAdapt
     }
 
     def upload(artifact: BuildArtifact)(recovery: PartialFunction[Throwable, Try[Continuation]] = PartialFunction.empty): Try[Continuation] = {
-      s3.upload(config.artifactBucket, runningBuild, artifact.getName, artifact.getInputStream, artifact.getSize) map {
-        uploaded =>
+      s3.upload(config.artifactBucket, runningBuild, artifact.getName, artifact.getInputStream, artifact.getSize)
+        .map { uploaded =>
           if (uploaded) {
             Continuation.CONTINUE
           } else {
             report(info("Not configured for uploading"))
             Continuation.BREAK
           }
-      } recoverWith recovery.orElse { case NonFatal(e) => {
+      } recoverWith recovery.orElse { case NonFatal(e) =>
         report(fail(s"Error uploading artifacts: $e"))
         Failure(e)
-      }}
+      }
     }
 
     report(info("About to upload artifacts to S3"))
