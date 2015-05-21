@@ -9,43 +9,43 @@ import jetbrains.buildServer.serverSide.artifacts.BuildArtifacts.BuildArtifactsP
 import jetbrains.buildServer.serverSide.artifacts.{BuildArtifact, BuildArtifactsViewMode}
 import jetbrains.buildServer.serverSide.{BuildServerAdapter, SRunningBuild}
 
-import scala.util.Failure
+import scala.util.{Try, Failure}
 import scala.util.control.NonFatal
 
 class ArtifactUploader(config: S3ConfigManager, s3: S3) extends BuildServerAdapter {
 
   override def beforeBuildFinish(runningBuild: SRunningBuild) {
-    def report(msg: String): Unit = {
-      runningBuild.addBuildMessage(normalMessage(msg))
+    def report(msg: BuildMessage1): Unit = {
+      runningBuild.addBuildMessage(msg)
     }
 
-    report("About to upload artifacts to S3")
+    report(info("About to upload artifacts to S3"))
 
     if (runningBuild.isArtifactsExists) {
       runningBuild.getArtifacts(BuildArtifactsViewMode.VIEW_DEFAULT).iterateArtifacts(new BuildArtifactsProcessor {
+
         def processBuildArtifact(buildArtifact: BuildArtifact) = {
-          if (buildArtifact.isFile || buildArtifact.isArchive)
+
+          def upload(recovery: PartialFunction[Throwable, Try[Continuation]] = PartialFunction.empty): Try[Continuation] = {
             s3.upload(config.artifactBucket, runningBuild, buildArtifact.getName, buildArtifact.getInputStream, buildArtifact.getSize) map {
               uploaded =>
                 if (uploaded) {
                   Continuation.CONTINUE
                 } else {
-                  report("Not configured for uploading")
+                  report(info("Not configured for uploading"))
                   Continuation.BREAK
                 }
-            } recoverWith {
-              case e: ResetException => {
-                runningBuild.addBuildMessage(new BuildMessage1(DefaultMessagesInfo.SOURCE_ID,
-                  DefaultMessagesInfo.MSG_BUILD_PROBLEM, Status.WARNING, new Date,
-                  s"Retrying artifact upload after error: ${e.getMessage}"))
+            } recoverWith recovery.orElse { case NonFatal(e) => {
+              report(fail(s"Error uploading artifacts: $e"))
+              Failure(e)
+            }}
+          }
 
-                s3.upload(config.artifactBucket, runningBuild, buildArtifact.getName,
-                  buildArtifact.getInputStream, buildArtifact.getSize).map(_ => Continuation.CONTINUE)
-              }
-              case NonFatal(e) => {
-                runningBuild.addBuildMessage(new BuildMessage1(DefaultMessagesInfo.SOURCE_ID, DefaultMessagesInfo.MSG_BUILD_FAILURE, Status.ERROR, new Date,
-                  s"Error uploading artifacts: ${e.getMessage}"))
-                Failure(e)
+          if (buildArtifact.isFile || buildArtifact.isArchive)
+            upload {
+              case e: ResetException => {
+                report(warn(s"Retrying artifact upload after error: ${e.getMessage}"))
+                upload()
               }
             } getOrElse(Continuation.BREAK)
           else
@@ -54,9 +54,13 @@ class ArtifactUploader(config: S3ConfigManager, s3: S3) extends BuildServerAdapt
       })
     }
 
-    report("Artifact S3 upload complete")
+    report(info("Artifact S3 upload complete"))
   }
 
-  private def normalMessage(text: String) =
+  private def info(text: String) =
     new BuildMessage1(DefaultMessagesInfo.SOURCE_ID, DefaultMessagesInfo.MSG_TEXT, Status.NORMAL, new Date, text)
+  private def warn(text: String) =
+    new BuildMessage1(DefaultMessagesInfo.SOURCE_ID, DefaultMessagesInfo.MSG_BUILD_PROBLEM, Status.WARNING, new Date, text)
+  private def fail(text: String) =
+    new BuildMessage1(DefaultMessagesInfo.SOURCE_ID, DefaultMessagesInfo.MSG_BUILD_FAILURE, Status.FAILURE, new Date, text)
 }
