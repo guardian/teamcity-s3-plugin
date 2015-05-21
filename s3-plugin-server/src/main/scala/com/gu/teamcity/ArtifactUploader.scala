@@ -19,38 +19,38 @@ class ArtifactUploader(config: S3ConfigManager, s3: S3) extends BuildServerAdapt
       runningBuild.addBuildMessage(msg)
     }
 
+    def upload(artifact: BuildArtifact)(recovery: PartialFunction[Throwable, Try[Continuation]] = PartialFunction.empty): Try[Continuation] = {
+      s3.upload(config.artifactBucket, runningBuild, artifact.getName, artifact.getInputStream, artifact.getSize) map {
+        uploaded =>
+          if (uploaded) {
+            Continuation.CONTINUE
+          } else {
+            report(info("Not configured for uploading"))
+            Continuation.BREAK
+          }
+      } recoverWith recovery.orElse { case NonFatal(e) => {
+        report(fail(s"Error uploading artifacts: $e"))
+        Failure(e)
+      }}
+    }
+
     report(info("About to upload artifacts to S3"))
 
     if (runningBuild.isArtifactsExists) {
       runningBuild.getArtifacts(BuildArtifactsViewMode.VIEW_DEFAULT).iterateArtifacts(new BuildArtifactsProcessor {
 
         def processBuildArtifact(buildArtifact: BuildArtifact) = {
-
-          def upload(recovery: PartialFunction[Throwable, Try[Continuation]] = PartialFunction.empty): Try[Continuation] = {
-            s3.upload(config.artifactBucket, runningBuild, buildArtifact.getName, buildArtifact.getInputStream, buildArtifact.getSize) map {
-              uploaded =>
-                if (uploaded) {
-                  Continuation.CONTINUE
-                } else {
-                  report(info("Not configured for uploading"))
-                  Continuation.BREAK
-                }
-            } recoverWith recovery.orElse { case NonFatal(e) => {
-              report(fail(s"Error uploading artifacts: $e"))
-              Failure(e)
-            }}
-          }
-
           if (buildArtifact.isFile || buildArtifact.isArchive)
-            upload {
+            upload(buildArtifact) {
               case e: ResetException => {
                 report(warn(s"Retrying artifact upload after error: ${e.getMessage}"))
-                upload()
+                upload(buildArtifact)()
               }
             } getOrElse(Continuation.BREAK)
           else
             Continuation.CONTINUE
         }
+
       })
     }
 
