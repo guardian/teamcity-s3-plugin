@@ -19,7 +19,7 @@ class ArtifactUploader(config: S3ConfigManager, s3: S3) extends BuildServerAdapt
       runningBuild.addBuildMessage(msg)
     }
 
-    def upload(artifact: BuildArtifact)(recovery: PartialFunction[Throwable, Try[Continuation]] = PartialFunction.empty): Try[Continuation] = {
+    def upload(artifact: BuildArtifact): Try[Continuation] = {
       s3.upload(config.artifactBucket, runningBuild, artifact.getName, artifact.getInputStream, artifact.getSize)
         .map { uploaded =>
           if (uploaded) {
@@ -28,9 +28,6 @@ class ArtifactUploader(config: S3ConfigManager, s3: S3) extends BuildServerAdapt
             report(info("Not configured for uploading"))
             Continuation.BREAK
           }
-      } recoverWith recovery.orElse { case NonFatal(e) =>
-        report(fail(s"Error uploading artifacts: $e"))
-        Failure(e)
       }
     }
 
@@ -41,12 +38,15 @@ class ArtifactUploader(config: S3ConfigManager, s3: S3) extends BuildServerAdapt
 
         def processBuildArtifact(buildArtifact: BuildArtifact) = {
           if (buildArtifact.isFile || buildArtifact.isArchive)
-            upload(buildArtifact) {
-              case e: ResetException => {
+            upload(buildArtifact)
+              .recoverWith { case e: ResetException =>
                 report(warn(s"Retrying artifact upload after error: ${e.getMessage}"))
-                upload(buildArtifact)()
+                upload(buildArtifact)
               }
-            } getOrElse(Continuation.BREAK)
+              .recoverWith { case NonFatal(e) =>
+                report(fail(s"Error uploading artifacts: $e"))
+                Failure(e)
+              } getOrElse Continuation.BREAK
           else
             Continuation.CONTINUE
         }
