@@ -46,7 +46,7 @@ class ArtifactUploader(config: S3ConfigManager, s3: S3) extends BuildServerAdapt
               .recoverWith { case NonFatal(e) =>
                 report(fail(s"Error uploading artifacts: $e"))
                 Failure(e)
-              } getOrElse Continuation.BREAK
+              }.get
           else
             Continuation.CONTINUE
         }
