@@ -2,6 +2,7 @@ package com.gu.teamcity
 
 import java.io.InputStream
 
+import com.amazonaws.ClientConfiguration
 import com.amazonaws.auth.{AWSCredentialsProviderChain, DefaultAWSCredentialsProviderChain}
 import com.amazonaws.event.{ProgressEvent, ProgressListener}
 import com.amazonaws.services.s3.AmazonS3Client
@@ -20,7 +21,9 @@ class S3(config: S3ConfigManager) {
     provider
   }
 
-  val transferManager = new TransferManager(credentialsProvider)
+  val transferManager = new TransferManager(
+    new AmazonS3Client(credentialsProvider, new ClientConfiguration().withMaxErrorRetry(2))
+  )
 
   def upload(targetBucket: Option[String], build: SBuild, fileName: String, contents: InputStream, fileSize: Long): Try[Boolean] =
     (for (bucket <- targetBucket) yield
