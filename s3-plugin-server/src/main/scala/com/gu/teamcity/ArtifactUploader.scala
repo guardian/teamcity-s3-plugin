@@ -23,7 +23,7 @@ class ArtifactUploader(config: S3ConfigManager, s3: S3) extends BuildServerAdapt
       runningBuild.getArtifacts(BuildArtifactsViewMode.VIEW_DEFAULT).iterateArtifacts(new BuildArtifactsProcessor {
         def processBuildArtifact(buildArtifact: BuildArtifact) = {
           if (buildArtifact.isFile || buildArtifact.isArchive)
-            s3.upload(config.artifactBucket, runningBuild, buildArtifact.getName, buildArtifact.getInputStream, buildArtifact.getSize) map {
+            s3.upload(config.artifactBucket, runningBuild, buildArtifact.getName, buildArtifact.getInputStream) map {
               uploaded =>
                 if (uploaded) {
                   Continuation.CONTINUE
