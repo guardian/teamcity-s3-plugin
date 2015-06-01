@@ -49,7 +49,7 @@ class S3(config: S3ConfigManager) {
 object MakeFile {
 
   def apply(input: InputStream): File = {
-    val file = File.createTempFile("artefact", "")
+    val file = File.createTempFile("s3-plugin", "")
     val output = new FileOutputStream(file)
     try {
       val bytes = new Array[Byte](1024)
