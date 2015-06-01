@@ -22,11 +22,11 @@ class S3(config: S3ConfigManager) {
     new AmazonS3Client(credentialsProvider, new ClientConfiguration().withMaxErrorRetry(2))
   )
 
-  def upload(targetBucket: Option[String], build: SBuild, fileName: String, contents: InputStream, fileSize: Long): Try[Boolean] =
+  def upload(targetBucket: Option[String], build: SBuild, fileName: String, contents: InputStream): Try[Boolean] =
     (for (bucket <- targetBucket) yield
       Try {
         val uploadDirectory = s"${S3Plugin.cleanFullName(build)}/${build.getBuildNumber}"
-        val req: PutObjectRequest = putRequestAsFile(bucket, s"$uploadDirectory/$fileName", contents)
+        val req = putRequestAsFile(bucket, s"$uploadDirectory/$fileName", contents)
         val upload = transferManager.upload(req)
         upload.waitForUploadResult()
         true
