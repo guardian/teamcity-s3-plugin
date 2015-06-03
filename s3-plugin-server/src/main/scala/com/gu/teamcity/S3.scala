@@ -1,17 +1,14 @@
 package com.gu.teamcity
 
-import java.io.InputStream
+import java.io.{InputStream, File}
 
 import com.amazonaws.ClientConfiguration
 import com.amazonaws.auth.{AWSCredentialsProviderChain, DefaultAWSCredentialsProviderChain}
-import com.amazonaws.event.{ProgressEvent, ProgressListener}
 import com.amazonaws.services.s3.AmazonS3Client
-import com.amazonaws.services.s3.model.{PutObjectRequest, ObjectMetadata}
-import com.amazonaws.services.s3.transfer.{PersistableTransfer, TransferManager}
-import com.amazonaws.services.s3.transfer.internal.{S3ProgressListenerChain, TransferManagerUtils, S3ProgressListener}
+import com.amazonaws.services.s3.model.{ObjectMetadata, PutObjectRequest}
+import com.amazonaws.services.s3.transfer.TransferManager
 import jetbrains.buildServer.serverSide.SBuild
 
-import scala.concurrent.Promise
 import scala.util.{Success, Try}
 
 class S3(config: S3ConfigManager) {
@@ -25,19 +22,25 @@ class S3(config: S3ConfigManager) {
     new AmazonS3Client(credentialsProvider, new ClientConfiguration().withMaxErrorRetry(2))
   )
 
-  def upload(targetBucket: Option[String], build: SBuild, fileName: String, contents: InputStream, fileSize: Long): Try[Boolean] =
-    (for (bucket <- targetBucket) yield
-      Try {
-        val uploadDirectory = s"${S3Plugin.cleanFullName(build)}/${build.getBuildNumber}"
-        val metadata = {
-          val md = new ObjectMetadata()
-          md.setContentLength(fileSize)
-          md
-        }
-        val req = new PutObjectRequest(bucket, s"$uploadDirectory/$fileName", contents, metadata)
-        val upload = transferManager.upload(req)
-        upload.waitForUploadResult()
-        true
+  def upload(bucket: String, build: SBuild, fileName: String, contents: InputStream, fileSize: Long): Try[Unit] =
+    Try {
+      val uploadDirectory = s"${S3Plugin.cleanFullName(build)}/${build.getBuildNumber}"
+      val metadata = {
+        val md = new ObjectMetadata()
+        md.setContentLength(fileSize)
+        md
       }
-    ) getOrElse (Success(false))
+      val req = new PutObjectRequest(bucket, s"$uploadDirectory/$fileName", contents, metadata)
+      val upload = transferManager.upload(req)
+      upload.waitForUploadResult()
+    }
+
+  def upload(bucket: String, build: SBuild, fileName: String, file: File): Try[Unit] =
+    Try {
+      val uploadDirectory = s"${S3Plugin.cleanFullName(build)}/${build.getBuildNumber}"
+      val req = new PutObjectRequest(bucket, s"$uploadDirectory/$fileName", file)
+      val upload = transferManager.upload(req)
+      upload.waitForUploadResult()
+    }
+
 }
