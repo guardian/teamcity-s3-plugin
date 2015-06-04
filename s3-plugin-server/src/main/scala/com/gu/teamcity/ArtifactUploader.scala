@@ -37,11 +37,7 @@ class ArtifactUploader(config: S3ConfigManager, s3: S3) extends BuildServerAdapt
     if (!runningBuild.isArtifactsExists) {
       Nil
     } else {
-
-      val root = runningBuild.getArtifactsDirectory
-
-      ArtifactUploader.getChildren(root)
-
+      ArtifactUploader.getChildren(runningBuild.getArtifactsDirectory)
     }
   }
 
@@ -54,11 +50,15 @@ object ArtifactUploader {
   def getChildren(file: File, paths: Seq[String] = Nil, current: String = ""): Seq[(String, File)] = {
     file.listFiles.toSeq.flatMap {
       child =>
-        val newPath = current + child.getName
-        if (child.isDirectory) {
-          getChildren(child, paths, newPath + File.separator)
+        if (child.isHidden) {
+          Seq()
         } else {
-          Seq((newPath, child))
+          val newPath = current + child.getName
+          if (child.isDirectory) {
+            getChildren(child, paths, newPath + File.separator)
+          } else {
+            Seq((newPath, child))
+          }
         }
     }
   }
