@@ -5,7 +5,7 @@ import org.scalatest._
 
 class S3ConfigManagerSpec extends FlatSpec with Matchers {
   "secret" should "be persisted" in {
-    val configManager = new S3ConfigManager(new ServerPaths("", "", ""))
+    val configManager = new S3ConfigManager(new ServerPaths("", "", "", ""))
 
     configManager.update(S3Config(None, None, None, Some("key"), Some("secret")))
 
@@ -13,7 +13,7 @@ class S3ConfigManagerSpec extends FlatSpec with Matchers {
   }
 
   "secret" should "stay same if key same and secret empty" in {
-    val configManager = new S3ConfigManager(new ServerPaths("", "", ""))
+    val configManager = new S3ConfigManager(new ServerPaths("", "", "", ""))
 
     configManager.update(S3Config(None, None, None, Some("key"), Some("secret")))
     configManager.update(S3Config(None, None, None, Some("key"), None))
@@ -22,7 +22,7 @@ class S3ConfigManagerSpec extends FlatSpec with Matchers {
   }
 
   "secret" should "stay reset if key changes and secret empty" in {
-    val configManager = new S3ConfigManager(new ServerPaths("", "", ""))
+    val configManager = new S3ConfigManager(new ServerPaths("", "", "", ""))
 
     configManager.update(S3Config(None, None, None, Some("key"), Some("secret")))
     configManager.update(S3Config(None, None, None, Some("new key"), None))
