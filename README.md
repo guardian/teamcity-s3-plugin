@@ -14,8 +14,6 @@ You need to install a version matching your TeamCity version:
 |   9.1.x       |   1.5.0    |
 |   8.1x        |   1.4.0    |
 
------
-
 Build
 -----
 Issue `mvn package` command from the root project to build the plugin. Resulting package s3-plugin.zip will be placed
