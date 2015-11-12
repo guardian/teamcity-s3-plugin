@@ -5,7 +5,7 @@ import java.io.{InputStream, File}
 import com.amazonaws.ClientConfiguration
 import com.amazonaws.auth.{AWSCredentialsProviderChain, DefaultAWSCredentialsProviderChain}
 import com.amazonaws.services.s3.AmazonS3Client
-import com.amazonaws.services.s3.model.{ObjectMetadata, PutObjectRequest}
+import com.amazonaws.services.s3.model.{ObjectMetadata, PutObjectRequest, CannedAccessControlList}
 import com.amazonaws.services.s3.transfer.TransferManager
 import jetbrains.buildServer.serverSide.SBuild
 
@@ -31,6 +31,7 @@ class S3(config: S3ConfigManager) {
         md
       }
       val req = new PutObjectRequest(bucket, s"$uploadDirectory/$fileName", contents, metadata)
+      req.withCannedAcl(CannedAccessControlList.BucketOwnerFullControl)
       val upload = transferManager.upload(req)
       upload.waitForUploadResult()
     }
@@ -39,6 +40,7 @@ class S3(config: S3ConfigManager) {
     Try {
       val uploadDirectory = s"${S3Plugin.cleanFullName(build)}/${build.getBuildNumber}"
       val req = new PutObjectRequest(bucket, s"$uploadDirectory/$fileName", file)
+      req.withCannedAcl(CannedAccessControlList.BucketOwnerFullControl)
       val upload = transferManager.upload(req)
       upload.waitForUploadResult()
     }
