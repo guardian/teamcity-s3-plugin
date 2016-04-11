@@ -25,4 +25,6 @@ Install
 -------
 To install the plugin, put zip archive to `plugins` dir under TeamCity data directory and restart the server.
 
- 
+If all works correctly, your admin screen should look something like:
+
+![Admin screen with S3 plugin](teamcity-admin-screenshot.png?raw=true) 
