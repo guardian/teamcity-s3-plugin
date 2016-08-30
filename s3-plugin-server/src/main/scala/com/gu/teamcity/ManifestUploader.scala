@@ -36,9 +36,9 @@ class ManifestUploader(config: S3ConfigManager, s3: S3) extends BuildServerAdapt
 
       config.buildManifestBucket.map { bucket =>
         s3.upload(bucket, runningBuild, "build.json", new ByteArrayInputStream(jsBytes), jsBytes.length) match {
-          case Failure(e) => runningBuild.addBuildMessage(new BuildMessage1(DefaultMessagesInfo.SOURCE_ID, DefaultMessagesInfo.MSG_BUILD_FAILURE, Status.ERROR, new Date,
+          case Failure(e) => runningBuild.getBuildLog().message(new BuildMessage1(DefaultMessagesInfo.SOURCE_ID, DefaultMessagesInfo.MSG_BUILD_FAILURE, Status.ERROR, new Date,
             s"Error uploading manifest: ${e.getMessage}"))
-          case Success(_) => runningBuild.addBuildMessage(normalMessage("Manifest S3 upload complete"))
+          case Success(_) => runningBuild.getBuildLog().message(normalMessage("Manifest S3 upload complete"))
         }
       }
     }
