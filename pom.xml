@@ -6,7 +6,7 @@
   <version>1.5.2-SNAPSHOT</version>
   <packaging>pom</packaging>
   <properties>
-      <teamcity-version>9.1.1</teamcity-version>
+      <teamcity-version>10.0.2</teamcity-version>
   </properties>
   <repositories>
     <repository>
