@@ -12,7 +12,7 @@ class ArtifactUploader(config: S3ConfigManager, s3: S3) extends BuildServerAdapt
 
   override def beforeBuildFinish(runningBuild: SRunningBuild) {
     def report(msg: String): Unit = {
-      runningBuild.addBuildMessage(normalMessage(msg))
+      runningBuild.getBuildLog().message(msg,Status.NORMAL,new Date,DefaultMessagesInfo.MSG_TEXT,DefaultMessagesInfo.SOURCE_ID,null)
     }
 
     report("About to upload artifacts to S3")
@@ -24,8 +24,8 @@ class ArtifactUploader(config: S3ConfigManager, s3: S3) extends BuildServerAdapt
         case Some(bucket) =>
           s3.upload(bucket, runningBuild, name, artifact).recover {
             case NonFatal(e) =>
-              runningBuild.addBuildMessage(new BuildMessage1(DefaultMessagesInfo.SOURCE_ID, DefaultMessagesInfo.MSG_BUILD_FAILURE, Status.ERROR, new Date,
-                s"Error uploading artifacts: ${e.getMessage}"))
+              runningBuild.getBuildLog().message(s"Error uploading artifacts: ${e.getMessage}",
+                  Status.ERROR,new Date,DefaultMessagesInfo.MSG_BUILD_FAILURE,DefaultMessagesInfo.SOURCE_ID,null)
           }
       }
     }
