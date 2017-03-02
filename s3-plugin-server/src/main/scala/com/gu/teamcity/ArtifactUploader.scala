@@ -55,7 +55,7 @@ object ArtifactUploader {
         } else {
           val newPath = current + child.getName
           if (child.isDirectory) {
-            getChildren(child, paths, newPath + File.separator)
+            getChildren(child, paths, newPath + '/')
           } else {
             Seq((newPath, child))
           }
