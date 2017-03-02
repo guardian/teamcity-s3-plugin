@@ -16,7 +16,7 @@ class S3ConfigController(config: S3ConfigManager, webControllerManager: WebContr
 
     config.updateAndPersist(S3Config(
       param("artifactBucket"), param("buildManifestBucket"), param("tagManifestBucket"),
-      param("accessKey"), param("secretKey")
+      param("accessKey"), param("secretKey"), param("folderPath")
     ))
 
     new ModelAndView(new RedirectView("/admin/admin.html?item=S3"))
