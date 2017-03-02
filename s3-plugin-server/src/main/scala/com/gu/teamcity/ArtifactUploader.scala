@@ -50,7 +50,9 @@ object ArtifactUploader {
   def getChildren(file: File, paths: Seq[String] = Nil, current: String = ""): Seq[(String, File)] = {
     file.listFiles.toSeq.flatMap {
       child =>
-        if (child.isHidden) {
+        // TeamCity only considers the .teamcity folder to be hidden artifacts
+        // See https://confluence.jetbrains.com/display/TCD10/Build+Artifact
+        if (child.getName == ".teamcity") {
           Seq()
         } else {
           val newPath = current + child.getName
