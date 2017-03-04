@@ -11,7 +11,8 @@ import org.json4s.native.Serialization._
 
 case class S3Config(
   artifactBucket: Option[String], buildManifestBucket: Option[String], tagManifestBucket: Option[String],
-  awsAccessKey: Option[String], awsSecretKey: Option[String]
+  awsAccessKey: Option[String], awsSecretKey: Option[String],
+  folderPath: Option[String] = Some("%system.teamcity.projectName%::%system.teamcity.buildConfName%/%build.number%")
 )
 
 class S3ConfigManager(paths: ServerPaths) extends AWSCredentialsProvider {
@@ -28,6 +29,7 @@ class S3ConfigManager(paths: ServerPaths) extends AWSCredentialsProvider {
   def artifactBucket: Option[String] = config.flatMap(_.artifactBucket)
   def buildManifestBucket: Option[String] = config.flatMap(_.buildManifestBucket)
   def tagManifestBucket: Option[String] = config.flatMap(_.tagManifestBucket)
+  def folderPath: Option[String] = config.flatMap(_.folderPath)
 
   private[teamcity] def update(config: S3Config): Unit = {
     this.config = Some(if (config.awsSecretKey.isEmpty && config.awsAccessKey == this.config.flatMap(_.awsAccessKey)) {
@@ -48,7 +50,8 @@ class S3ConfigManager(paths: ServerPaths) extends AWSCredentialsProvider {
     "artifactBucket" -> artifactBucket,
     "buildManifestBucket" -> buildManifestBucket,
     "tagManifestBucket" -> tagManifestBucket,
-    "accessKey" -> config.flatMap(_.awsAccessKey)
+    "accessKey" -> config.flatMap(_.awsAccessKey),
+    "folderPath" -> folderPath
   )
 
   override def getCredentials: AWSCredentials = (for {

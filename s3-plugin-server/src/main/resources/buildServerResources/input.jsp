@@ -51,6 +51,12 @@
                 </td><td>
                     <input type="password" id="secret-key" name="secretKey" class="longField">
                 </td>
+            </tr><tr>
+                <td>
+                    <label for="folderPath">Folder path (supports parameters)</label>
+                </td><td>
+                    <input type="text" id="folderPath" name="folderPath" value="${folderPath}" class="longField">
+                </td>
             </tr>
         </tbody>
     </table>

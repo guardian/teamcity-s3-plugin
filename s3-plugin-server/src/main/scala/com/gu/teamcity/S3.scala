@@ -24,7 +24,7 @@ class S3(config: S3ConfigManager) {
 
   def upload(bucket: String, build: SBuild, fileName: String, contents: InputStream, fileSize: Long): Try[Unit] =
     Try {
-      val uploadDirectory = s"${S3Plugin.cleanFullName(build)}/${build.getBuildNumber}"
+      val uploadDirectory = s"${S3Plugin.fillParameters(build, config.folderPath.get)}"
       val metadata = {
         val md = new ObjectMetadata()
         md.setContentLength(fileSize)
@@ -38,7 +38,7 @@ class S3(config: S3ConfigManager) {
 
   def upload(bucket: String, build: SBuild, fileName: String, file: File): Try[Unit] =
     Try {
-      val uploadDirectory = s"${S3Plugin.cleanFullName(build)}/${build.getBuildNumber}"
+      val uploadDirectory = s"${S3Plugin.fillParameters(build, config.folderPath.get)}"
       val req = new PutObjectRequest(bucket, s"$uploadDirectory/$fileName", file)
       req.withCannedAcl(CannedAccessControlList.BucketOwnerFullControl)
       val upload = transferManager.upload(req)
