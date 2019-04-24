@@ -11,9 +11,11 @@ You need to install a version matching your TeamCity version:
 
 |   TeamCity    |  S3 Plugin |
 |---------------|------------|
+|   2018.x      |   1.7.0    |
 |   10.0.x      |   1.6.0    |
 |   9.1.x       |   1.5.0    |
 |   8.1x        |   1.4.0    |
+
 
 Build
 -----
