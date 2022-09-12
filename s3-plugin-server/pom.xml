@@ -4,7 +4,7 @@
   <parent>
     <artifactId>s3-plugin</artifactId>
     <groupId>com.gu.teamcity</groupId>
-    <version>1.5.2-SNAPSHOT</version>
+    <version>1.7.1-SNAPSHOT</version>
   </parent>
   <artifactId>s3-plugin-server</artifactId>
   <packaging>jar</packaging>
@@ -44,7 +44,7 @@
     <dependency>
       <groupId>com.gu.teamcity</groupId>
       <artifactId>s3-plugin-common</artifactId>
-      <version>1.5.2-SNAPSHOT</version>
+      <version>1.7.1-SNAPSHOT</version>
       <scope>compile</scope>
     </dependency>
 
